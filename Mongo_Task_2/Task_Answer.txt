@@ -1,0 +1,92 @@
+*********************************
+
+Question 1:
+Find all the topics and tasks which are thought in the month of October
+
+answer:
+// using Classes collection
+//finds course taken within the dates
+
+db.Classes.find({date_of_course : {$gte : "2020-10-01" , $lte : "2020-10-31"}})
+
+*********************************
+
+Question 2:
+Find all the company drives which appeared between 15 oct-2020 and 31-oct-2020
+
+answer:
+//Using CampusDrive collection
+//finds campus drives within the dates
+
+db.CampusDrive.find({date : {$gte : "2020-10-15", $lte : "2020-10-31"}})
+
+*********************************
+
+Question 3:
+Find all the company drives and students who are appeared for the placement.
+
+answer:
+// Using CampusDrive and Users collections
+// Iterating individual CampusDrive with all users data 
+
+db.CampusDrive.find({},{_id:0,company_name : 1, present_students : 1}).forEach(function (doc) {
+if(doc.present_students && doc.present_students.length > 1){
+    // matching the id in present_students array with id in individual users and pulling the array
+	const campus_attended_students = db.Users.find({id : {$in : doc.present_students}},{_id : 0, name : 1}).toArray();
+	
+    // printing the values for interactive use
+    print("Company : "+doc.company_name);
+	print("Students attended the Campus drive");
+	printjson(campus_attended_students)
+}else{
+	print("No Company drive data is available")
+}})
+
+*********************************
+
+Question 4:
+Find the number of problems solved by the user in codekata
+answer:
+//using Codekata collection
+db.Codekata.find({},{_id:0,name : 1, username : 1,codekata : 1})
+
+*********************************
+
+Question 5:
+Find all the mentors with who has the mentee's count more than 15
+
+answer:
+// Using collection Mentor and Codekata
+// Interating for each mentor and connecting with other collection via course taken by the mentor and getting the count
+
+db.Mentor.find({},{_id:0,course : 1, mentor_name : 1}).forEach(function (ment){
+if(ment.mentor_name){
+	const students = db.Codekata.count({course_taken : {$eq : ment.course}});
+	if(students > 15){
+        // printing the count for interactive use
+		print("Students Count for Mentor : "+ment.mentor_name +" is "+students);
+	}
+}else{
+	print("No such Mentor data is available")
+}
+})
+
+*********************************
+
+Question 6:
+Find the number of users who are absent and task is not submitted  between 15 oct-2020 and 31-oct-2020
+
+answer:
+// Using collection Classes and Users
+// interating Classes to users. first filtering class with date and filter users with absent and not submitted via $nin
+
+db.Classes.find({date_of_course : {$gte : "2020-10-15" , $lte : "2020-10-31"}}).forEach(function(doc){
+	if(doc.attendance && doc.tasks_submitted){
+		const cc = db.Users.count({id : {$nin : doc.attendance}},{id : {$nin : doc.tasks_submitted}})
+		print(`On Class on ${doc.date_of_course}, students absent and task not submitted are : ${cc}`)
+	}else{
+		print("No Class or Task in request date interval")
+	}
+})
+
+*********************************
